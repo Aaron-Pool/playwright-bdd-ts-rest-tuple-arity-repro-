@@ -1,19 +1,48 @@
-import { createBdd, DataTable } from 'playwright-bdd';
+import { expect } from '@playwright/test';
+import { createBdd } from 'playwright-bdd';
 
-const { Given } = createBdd();
+const { Given, Then } = createBdd();
 
-type EntityType = 'widget';
-type EntityRows = DataTable;
-type EntityArgs = [EntityType, EntityRows];
-
-Given(/the following (widget)s exist:/, ({}, ...[entityType, rows]: EntityArgs) => {
-  const parsedRows = rows.hashes();
-
-  if (entityType !== 'widget') {
-    throw new Error(`Unexpected entity type: ${entityType}`);
+type DataHash<T extends keyof Entities> = { hashes: () => Entities[T][] };
+type Entities = {
+  person: {
+    Name: string,
+    Age: number,
+    Country: string
+  },
+  animal: {
+    Name: string,
+    Age: number,
+    Species: string,
   }
+};
 
-  if (parsedRows.length !== 1) {
-    throw new Error(`Expected one row, got ${parsedRows.length}`);
+type EntityArgs<T extends keyof Entities> ={[key in keyof Entities]: [key, DataHash<key>] }[T];
+
+Given(/the following (person|animal)s exist:/, ({}, ...args: EntityArgs<keyof Entities>) => {
+  const [type, list] = args;
+  switch (type) {
+    case 'person':
+      handlePerson(list);
+      break;
+    case 'animal':
+      handleAnimal(list);
+      break;
+    default:
+      throw new Error(`Unknown entity type: ${args[0]}`);
   }
 });
+
+Then('everything is fine', () => {
+  expect(true).toBe(true);
+});
+
+function handleAnimal(list: EntityArgs<'animal'>[1]) {
+  const animals = list.hashes();
+  console.log('Handling animals:', animals);
+}
+
+function handlePerson(list: EntityArgs<'person'>[1]) {
+  const people = list.hashes();
+  console.log('Handling people:', people);
+}
