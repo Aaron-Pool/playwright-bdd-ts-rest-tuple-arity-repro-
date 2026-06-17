@@ -38,7 +38,14 @@ type EntityArgs<T extends keyof Entities> ={[key in keyof Entities]: [key, DataH
 
 Given(/the following (person|animal)s exist:/, ({}, ...args: EntityArgs<keyof Entities>) => {
   const [type, list] = args;
-  //...
+  switch(type) {
+    case 'person':
+      // list narrowed to Entities['person'] model
+    case 'animal'
+      // list is narrowed to Entities['animal'] model
+    default:
+      throw Error('unrecognized type')
+  }
 });
 ```
 
